@@ -8,7 +8,7 @@ mkdir -p "$LOG_DIR"
 SCAN_PATH="/"
 
 log(){
-echo "$(date '+%F %t)|$1"|tee -a "$FILE_DIR"
+echo "$(date '+%F %T)|$1"|tee -a "$FILE_DIR"
 }
 
 on_error(){
@@ -55,7 +55,7 @@ esac
 done
 
 world_writable_files(){
-mapfile -t FILES < <(find "$SCAN_PATH" -xdev -type f -perm 0002 2>/dev/null)
+mapfile -t FILES < <(find "$SCAN_PATH" -xdev -type f -perm -0002 2>/dev/null)
 echo "${#FILES[@]}"
 
 if $FIX_MODE; then
@@ -68,12 +68,12 @@ fi
 }
 
 suid_files(){
-mapfile -t FILES < <(find "$SCAN_PATH" -xdev -perm 4000 2>/dev/null)
+mapfile -t FILES < <(find "$SCAN_PATH" -xdev -perm -4000 2>/dev/null)
 echo "${#FILES[@]}"
 }
 
 sgid_files(){ 
-mapfile -t FILES < <(find "$SCAN_PATH" -xdev -perm 2000 2>/dev/null)
+mapfile -t FILES < <(find "$SCAN_PATH" -xdev -perm -2000 2>/dev/null)
 echo "${#FILES[@]}"
 }
   
@@ -87,17 +87,17 @@ done
 }
 
 rootcheck
-if SUMMARY; then
-echolog "===== Permission Audit Started ====="
+if $SUMMARY; then
+log "===== Permission Audit Started ====="
 
 WW_COUNT=$(world_writable_files)
 SUID_COUNT=$(suid_files)
 SGID_COUNT=$(sgid_files)
 
-sensitive_files_check
+sensitive_files
 
 log "===== Permission Audit Completed ====="
-
+fi
 if $SUMMARY; then
   echo
   echo "📊 SUMMARY"
